@@ -1,0 +1,109 @@
+Load map
+Module entry point: 0x00400a00
+
+Module:  life_age.obj
+ Text segment:  2556 bytes, load point 0x00400000
+ Data segment:  2344 bytes, load point 0x10000000
+ Symbols:
+                                Name Section Mode    Value
+                   simulate_age_cell   Text   R   0x00400570
+                   board_size_prompt   Data   R   0x10000074
+           main_generation_loop_done   Text   R   0x004009f4
+                      bad_cell_value   Text   R   0x00400184
+                                main   Text   RG  0x0040095c
+            bad_cell_location_return   Text   R   0x004001ec
+     clear_cell_array_row_loop_start   Text   R   0x004008f0
+                count_neighbors_done   Text   R   0x00400890
+                            new_line   Data   R   0x100001c1
+               generation_loop_start   Text   R   0x004009ac
+                   start_board_input   Text   R   0x0040001c
+        get_bottom_left_not_negative   Text   R   0x004007d8
+       get_top_left_row_not_negative   Text   R   0x00400628
+              simulate_generate_cell   Text   R   0x004005b4
+                     bad_board_value   Text   R   0x0040015c
+      clear_cell_array_row_loop_done   Text   R   0x0040094c
+                invalid_cells_prompt   Data   R   0x10000146
+     print_board_print_row_loop_done   Text   R   0x004002f0
+                  simulate_kill_cell   Text   R   0x0040055c
+                         blank_space   Data   R   0x1000019a
+                            READ_INT          A   0x00000005
+                         dash_symbol   Data   R   0x100001bd
+       get_attributes_complete_print   Data   R   0x100001c3
+              simulate_row_loop_done   Text   R   0x004005d8
+                get_top_not_negative   Text   R   0x0040068c
+                    board_attributes   Data   R   0x10000918
+                         plus_symbol   Data   R   0x100001bb
+        set_dead_cells_row_loop_done   Text   R   0x004003e4
+                invalid_point_prompt   Data   R   0x1000017a
+              start_generation_input   Text   R   0x00400058
+           count_neighbors_get_right   Text   R   0x0040075c
+             count_neighbors_get_top   Text   R   0x00400664
+                  bad_location_value   Text   R   0x00400198
+                bad_generation_value   Text   R   0x00400170
+              check_space_return_two   Text   R   0x00400488
+                copy_array_loop_done   Text   R   0x004008d0
+                 get_attributes_done   Text   R   0x0040014c
+                    start_cell_input   Text   R   0x00400090
+                        PRINT_STRING          A   0x00000004
+       get_top_left_col_not_negative   Text   R   0x00400644
+          invalid_generations_prompt   Data   R   0x10000111
+              print_dashes_loop_done   Text   R   0x00400348
+          simulate_column_loop_start   Text   R   0x004004d0
+              enter_locations_prompt   Data   R   0x100000cc
+                set_cell_at_location   Text   R   0x004001b0
+              check_space_return_one   Text   R   0x0040046c
+          print_board_print_row_loop   Text   R   0x004002a4
+                     copy_cell_array   Text   R   0x004008a8
+                         check_space   Text   R   0x00400408
+                    clear_cell_array   Text   R   0x004008d4
+       set_dead_cells_row_loop_start   Text   R   0x00400384
+           live_cell_quantity_prompt   Data   R   0x100000ae
+            count_neighbors_get_left   Text   R   0x0040070c
+                          cell_array   Data   R   0x100001d4
+               get_left_not_negative   Text   R   0x00400738
+     count_neighbors_get_bottom_left   Text   R   0x004007a0
+             simulate_row_loop_start   Text   R   0x004004c4
+          get_top_right_not_negative   Text   R   0x004006d8
+            set_cell_buffer_location   Text   R   0x004001f4
+                  generation_print_1   Data   R   0x1000019c
+                  generation_print_2   Data   R   0x100001b1
+             print_dashes_loop_start   Text   R   0x00400338
+                                EXIT          A   0x0000000a
+    count_neighbors_get_bottom_right   Text   R   0x00400840
+                     count_neighbors   Text   R   0x004005ec
+                invalid_board_prompt   Data   R   0x100000e7
+          generation_quantity_prompt   Data   R   0x10000088
+   clear_cell_array_column_loop_done   Text   R   0x00400944
+           simulate_column_loop_done   Text   R   0x004005d0
+                        print_dashes   Text   R   0x00400328
+       count_neighbors_get_top_right   Text   R   0x004006b0
+             set_dead_cells_to_space   Text   R   0x00400354
+               copy_array_loop_start   Text   R   0x004008b0
+    print_board_print_row_loop_start   Text   R   0x0040029c
+             check_space_return_zero   Text   R   0x00400450
+                      get_attributes   Text   R   0x00400000
+                   start_point_input   Text   R   0x004000e8
+          count_neighbors_get_bottom   Text   R   0x004007fc
+             print_board_header_done   Text   R   0x00400298
+                           PRINT_INT          A   0x00000001
+                   cell_array_buffer   Data   R   0x10000576
+                       banner_string   Data   R   0x10000000
+                          bar_symbol   Data   R   0x100001bf
+            print_board_header_start   Text   R   0x00400270
+                         READ_STRING          A   0x00000008
+               get_points_loop_start   Text   R   0x004000e4
+  clear_cell_array_column_loop_start   Text   R   0x004008fc
+    set_dead_cells_column_loop_start   Text   R   0x0040039c
+     set_dead_cells_column_loop_done   Text   R   0x004003dc
+                            simulate   Text   R   0x004004a4
+                         print_board   Text   R   0x00400224
+                  simulate_cell_done   Text   R   0x004005c8
+        count_neighbors_get_top_left   Text   R   0x0040060c
+  set_dead_cells_alive_cell_detected   Text   R   0x004003d4
+
+Module:  r2k_startup.obj
+ Text segment:  36 bytes, load point 0x004009fc
+ Symbols:
+                                Name Section Mode    Value
+                           SYS_EXIT2          A   0x00000011
+                      __r2k__entry__   Text   RG  0x00400a00

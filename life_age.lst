@@ -1,0 +1,1362 @@
+   1 0000               # Name:	Eaton Wu
+   2 0000               # Section 3
+   3 0000               # Project 1 (of 1)
+   4 0000               #
+   5 0000               # Description:	Conway's Game of Life in MIPS!
+   6 0000               #
+   7 0000               #		The program reads three values from standard input:
+   8 0000               #		1) Board Size
+   9 0000               #       2) The number of generations
+  10 0000               #       3) Number of live cells
+  11 0000               #       4) Locations to initialize the life board w/ cells
+  12 0000               
+  13 0000               
+  14 0000               ### syscall codes ###
+  15 0000               PRINT_INT =	1     ###
+  16 0000               PRINT_STRING = 4  ###
+  17 0000               READ_INT = 5      ###
+  18 0000               READ_STRING = 8   ###
+  19 0000               EXIT = 10         ###
+  20 0000               #####################
+  21 0000               
+  22 0000               
+  23 0000               #------------------------ hardcoded strings ------------------------ #    
+  24 0000                   .data                                                            #
+  25 0000                   .align 2                                                         #
+  26 0000                                                                                    #
+  27 0000               banner_string:                                                       #
+  28 0000 0A2A2A2A	    .ascii  "\n*************************************\n"              #
+          2A2A2A2A
+          2A2A2A2A
+          2A2A2A2A
+          2A2A2A2A
+          2A2A2A2A
+  29 0027 2A2A2A2A	    .ascii  "****    Game of Life with Age    ****\n"                #
+          20202020
+          47616D65
+          206F6620
+          4C696665
+          20776974
+  30 004d 2A2A2A2A	    .asciiz "*************************************\n"                #
+          2A2A2A2A
+          2A2A2A2A
+          2A2A2A2A
+          2A2A2A2A
+          2A2A2A2A
+  31 0074                                                                                    #
+  32 0074               board_size_prompt:                                                   #
+  33 0074 0A456E74	    .asciiz "\nEnter board size: "                                   #
+          65722062
+          6F617264
+          2073697A
+          653A2000
+  34 0088                                                                                    #
+  35 0088               generation_quantity_prompt:                                          #
+  36 0088 0A456E74	    .asciiz "\nEnter number of generations to run: "                 #
+          6572206E
+          756D6265
+          72206F66
+          2067656E
+          65726174
+  37 00ae                                                                                    #
+  38 00ae               live_cell_quantity_prompt:                                           #
+  39 00ae 0A456E74	    .asciiz "\nEnter number of live cells: "                         #
+          6572206E
+          756D6265
+          72206F66
+          206C6976
+          65206365
+  40 00cc                                                                                    #
+  41 00cc               enter_locations_prompt:                                              #
+  42 00cc 0A537461	    .asciiz "\nStart entering locations\n"                           #
+          72742065
+          6E746572
+          696E6720
+          6C6F6361
+          74696F6E
+  43 00e7                                                                                    #
+  44 00e7               invalid_board_prompt:                                                #
+  45 00e7 0A574152	    .asciiz "\nWARNING: illegal board size, try again: "             #
+          4E494E47
+          3A20696C
+          6C656761
+          6C20626F
+          61726420
+  46 0111                                                                                    #
+  47 0111               invalid_generations_prompt:                                          #
+  48 0111 0A574152	    .asciiz "\nWARNING: illegal number of generations, try again: "  #
+          4E494E47
+          3A20696C
+          6C656761
+          6C206E75
+          6D626572
+  49 0146                                                                                    #
+  50 0146               invalid_cells_prompt:                                                #
+  51 0146 0A574152	    .asciiz "\nWARNING: illegal number of live cells, try again: "   #
+          4E494E47
+          3A20696C
+          6C656761
+          6C206E75
+          6D626572
+  52 017a                                                                                    #
+  53 017a               invalid_point_prompt:                                                #
+  54 017a 0A455252	    .asciiz "\nERROR: illegal point location\n"                      #
+          4F523A20
+          696C6C65
+          67616C20
+          706F696E
+          74206C6F
+  55 019a                                                                                    #
+  56 019a               blank_space:                                                         #
+  57 019a 2000    	    .asciiz " "                                                      #
+  58 019c                                                                                    #
+  59 019c               generation_print_1:                                                  #
+  60 019c 0A3D3D3D	    .asciiz "\n====    GENERATION "                                  #
+          3D202020
+          2047454E
+          45524154
+          494F4E20
+          00      
+  61 01b1                                                                                    #
+  62 01b1               generation_print_2:                                                  #
+  63 01b1 20202020	    .asciiz "    ====\n"                                             #
+          3D3D3D3D
+          0A00    
+  64 01bb                                                                                    #
+  65 01bb               plus_symbol:                                                         #
+  66 01bb 2B00    	    .asciiz "+"                                                      #
+  67 01bd                                                                                    #
+  68 01bd               dash_symbol:                                                         #
+  69 01bd 2D00    	    .asciiz "-"                                                      #
+  70 01bf                                                                                    #
+  71 01bf               bar_symbol:                                                          #
+  72 01bf 7C00    	    .asciiz "|"                                                      #
+  73 01c1                                                                                    #
+  74 01c1               new_line:                                                            #
+  75 01c1 0A00    	    .asciiz "\n"                                                     #
+  76 01c3                                                                                    #
+  77 01c3               get_attributes_complete_print:                                       #
+  78 01c3 0A6C6F63	    .asciiz "\nlocations done\n"                                     #
+          6174696F
+          6E732064
+          6F6E650A
+          00      
+  79 01d4                                                                                    #
+  80 01d4                                                                                    #
+  81 01d4                                                                                    #
+  82 01d4                                                                                    #
+  83 0000                   .text                                                            #
+  84 0000                                                                                    #
+  85 0000               #------------------------ hardcoded strings ------------------------ #
+  86 0000                   
+  87 0000               
+  88 0000               
+  89 0000               #---------------------- Game of Life Attribute Struct ---------------------- #
+  90 01d4                   .data
+  91 01d4               
+  92 01d4               cell_array:
+  93 01d4 00000000	    .space 930              # allocate 120 bytes (maximum size of 30 * 30 bytes, one byte per character + null terminator)
+          00000000
+          00000000
+          00000000
+          00000000
+          00000000
+  94 0576               
+  95 0576               cell_array_buffer:
+  96 0576 00000000	    .space 930              # allocate 
+          00000000
+          00000000
+          00000000
+          00000000
+          00000000
+  97 0918               
+  98 0918               board_attributes:     
+  99 0918 00000000	    .word   0                 # board size (0)
+ 100 091c 00000000	    .word   0                 # generation quantity (4)
+ 101 0920 00000000	    .word   0                 # cell quantity (8)
+ 102 0924               
+ 103 0000                   .text
+ 104 0000               #---------------------- Game of Life Attribute Struct ---------------------- # 
+ 105 0000               
+ 106 0000               #   get_attributes()
+ 107 0000               #   sets the game of life matrix (cell_array)to an initial state, 
+ 108 0000               #   specified by the user
+ 109 0000               #   
+ 110 0000               #   arguments: n/a
+ 111 0000               #   destroys: $a0, $t1, $t2, $t3, $t4
+ 112 0000               get_attributes:
+ 113 0000               
+ 114 0000 23BD0008	    addi    $sp, $sp, 8         # allocate space for 1
+ 115 0004 AFB00004	    sw      $s0, 4($sp)
+ 116 0008 AFBF0000	    sw      $ra, 0($sp)
+ 117 000c               
+ 118 000c                   # BOARD INPUT #
+ 119 000c 34020004	    li      $v0, PRINT_STRING
+ 120 0010 3C040000	    la      $a0, board_size_prompt
+     0014 34840000
+ 121 0018 0000000C	    syscall
+ 122 001c                   start_board_input:
+ 123 001c 34020005	    li      $v0, READ_INT           
+ 124 0020 0000000C	    syscall                                     # at this point, board_size is in $v0
+ 125 0024 340A0004	    li      $t2, 4
+ 126 0028 004A402A	    slt     $t0, $v0, $t2                       # check if input - 30 is negative, is < 30 if $t0 is 0
+ 127 002c 1500004B	    bne		$t0, $zero, bad_board_value         # if not 0, then value was greater than 30
+ 128 0030 340A001F	    li      $t2, 31
+ 129 0034 004A482A	    slt     $t1, $v0, $t2                       # check if input - 4 is positive, is < 4 if $t0 is 1
+ 130 0038 11200048	    beq     $t1, $zero, bad_board_value
+ 131 003c                   # if value is valid, set cell_array[0] = $v0
+ 132 003c 3C080000	    la		$t0, board_attributes
+     0040 35080000
+ 133 0044 AD020000	    sw		$v0, 0($t0)	                        # dereference cell_array to store board_size
+ 134 0048                    
+ 135 0048               
+ 136 0048                   # GENERATION INPUT #
+ 137 0048 34020004	    li      $v0, PRINT_STRING
+ 138 004c 3C040000	    la      $a0, generation_quantity_prompt
+     0050 34840000
+ 139 0054 0000000C	    syscall
+ 140 0058                   start_generation_input:
+ 141 0058 34020005	    li      $v0, READ_INT           
+ 142 005c 0000000C	    syscall
+ 143 0060               
+ 144 0060 340A0015	    li      $t2, 21
+ 145 0064               
+ 146 0064 004A482A	    slt     $t1, $v0, $t2                       # is input < 20?
+ 147 0068 11200041	    beq     $t1, $zero, bad_generation_value    # if $t1 == 1, then $v0 was not greater than 20, which is ideal.
+ 148 006c               
+ 149 006c 0040402A	    slt     $t0, $v0, $zero                     # is input < 0 (negative)?                     
+ 150 0070 1500003F	    bne		$t0, $zero, bad_generation_value    # if not 0, then negative.
+ 151 0074 3C080000	    la      $t0, board_attributes
+     0078 35080000
+ 152 007c AD020004	    sw      $v0, 4($t0)
+ 153 0080               
+ 154 0080               
+ 155 0080                   # LIVE CELL QUANTITY INPUT #
+ 156 0080 34020004	    li      $v0, PRINT_STRING
+ 157 0084 3C040000	    la      $a0, live_cell_quantity_prompt
+     0088 34840000
+ 158 008c 0000000C	    syscall
+ 159 0090               
+ 160 0090                   start_cell_input:
+ 161 0090 34020005	    li      $v0, READ_INT           
+ 162 0094 0000000C	    syscall
+ 163 0098               
+ 164 0098 0040402A	    slt     $t0, $v0, $zero                     # check if input is negative, is negative if $t0 is 0
+ 165 009c 15000039	    bne		$t0, $zero, bad_cell_value          # if not 0, then value was greater than 30
+ 166 00a0                        
+ 167 00a0 3C080000	    la      $t0, board_attributes
+     00a4 35080000
+ 168 00a8 8D080000	    lw      $t0, 0($t0)                         # put board size into $t0
+ 169 00ac 01080018	    mult	$t0, $t0			                # square the board size
+ 170 00b0 00004012	    mflo	$t0					                # place max # of cells in $t0
+ 171 00b4                   
+ 172 00b4 0048482A	    slt     $t1, $v0, $t0                       # check if input < board_size ^ 2, then is valid
+ 173 00b8 11200032	    beq     $t1, $zero, bad_cell_value
+ 174 00bc 3C080000	    la      $t0, board_attributes
+     00c0 35080000
+ 175 00c4 AD020008	    sw      $v0, 8($t0)
+ 176 00c8               
+ 177 00c8               
+ 178 00c8 34020004	    li		$v0, PRINT_STRING
+ 179 00cc 3C040000	    la      $a0, enter_locations_prompt
+     00d0 34840000
+ 180 00d4 0000000C	    syscall
+ 181 00d8               
+ 182 00d8                   # Get counter for the decrementing for loop
+ 183 00d8                   # (while live_cell_count_copy > 0):
+ 184 00d8 3C100000	    la      $s0, board_attributes
+     00dc 36100000
+ 185 00e0 8D100008	    lw      $s0, 8($t0)
+ 186 00e4               
+ 187 00e4                   get_points_loop_start:
+ 188 00e4 12000019	    beq     $s0, $zero, get_attributes_done
+ 189 00e8               
+ 190 00e8                   start_point_input:
+ 191 00e8                   # CELL LOCATION QUANTIY INPUT #
+ 192 00e8                   # read row
+ 193 00e8 34020005	    li      $v0, READ_INT
+ 194 00ec 0000000C	    syscall
+ 195 00f0               
+ 196 00f0 3C090000	    la      $t1, board_attributes
+     00f4 35290000
+ 197 00f8 8D290000	    lw      $t1, 0($t1)
+ 198 00fc               
+ 199 00fc 0040402A	    slt     $t0, $v0, $zero
+ 200 0100 15000025	    bne     $t0, $zero, bad_location_value
+ 201 0104 0049402A	    slt     $t0, $v0, $t1
+ 202 0108 11000023	    beq     $t0, $zero, bad_location_value
+ 203 010c 00402021	    move    $a0, $v0    
+ 204 0110                   
+ 205 0110                   # read column
+ 206 0110 34020005	    li      $v0, READ_INT
+ 207 0114 0000000C	    syscall
+ 208 0118               
+ 209 0118 3C090000	    la      $t1, board_attributes
+     011c 35290000
+ 210 0120 8D290000	    lw      $t1, 0($t1)
+ 211 0124               
+ 212 0124 0040402A	    slt     $t0, $v0, $zero
+ 213 0128 1500001B	    bne     $t0, $zero, bad_location_value
+ 214 012c 0049402A	    slt     $t0, $v0, $t1
+ 215 0130 11000019	    beq     $t0, $zero, bad_location_value
+ 216 0134 00402821	    move    $a1, $v0    
+ 217 0138               
+ 218 0138                   # jump to set_cell_at_location and save position to $ra
+ 219 0138               
+ 220 0138 34060041	    li      $a2, 65     # pass character to 'A' to set_cell_at_location 
+ 221 013c 0C00006C	    jal		set_cell_at_location
+ 222 0140 14400015	    bne     $v0, $zero, bad_location_value
+ 223 0144               
+ 224 0144 2210FFFF	    addi    $s0, $s0, -1
+ 225 0148 08000039	    j       get_points_loop_start
+ 226 014c               
+ 227 014c                   get_attributes_done:
+ 228 014c               
+ 229 014c 8FBF0000	    lw		$ra, 0($sp)
+ 230 0150 8FB00004	    lw      $s0, 4($sp)
+ 231 0154 23BD0008	    addi    $sp, $sp, 8
+ 232 0158 03E00008	    jr      $ra
+ 233 015c               
+ 234 015c                   # if bad board value is detected, re-prompt
+ 235 015c                   bad_board_value:
+ 236 015c 34020004	    li      $v0, PRINT_STRING
+ 237 0160 3C040000	    la      $a0, invalid_board_prompt
+     0164 34840000
+ 238 0168 0000000C	    syscall
+ 239 016c 08000007	    j       start_board_input              
+ 240 0170               
+ 241 0170                   bad_generation_value:
+ 242 0170 34020004	    li      $v0, PRINT_STRING
+ 243 0174 3C040000	    la      $a0, invalid_generations_prompt
+     0178 34840000
+ 244 017c 0000000C	    syscall
+ 245 0180 08000016	    j       start_generation_input         
+ 246 0184               
+ 247 0184                   bad_cell_value:
+ 248 0184 34020004	    li      $v0, PRINT_STRING
+ 249 0188 3C040000	    la      $a0, invalid_cells_prompt
+     018c 34840000
+ 250 0190 0000000C	    syscall
+ 251 0194 08000024	    j       start_cell_input  
+ 252 0198               
+ 253 0198                   bad_location_value:
+ 254 0198 34020004	    li      $v0, PRINT_STRING
+ 255 019c 3C040000	    la      $a0, invalid_point_prompt
+     01a0 34840000
+ 256 01a4 0000000C	    syscall
+ 257 01a8 3402000A	    li      $v0, EXIT
+ 258 01ac 0000000C	    syscall         
+ 259 01b0               
+ 260 01b0               
+ 261 01b0               #   set_cell_at_location
+ 262 01b0               #   
+ 263 01b0               #   Takes a point, and sets it to a character
+ 264 01b0               #   using formula (board_size * row_number) + row_number + col_num
+ 265 01b0               #   arguments:  $a0 = row
+ 266 01b0               #               $a1 = col
+ 267 01b0               #               $a2 = character to place in
+ 268 01b0               #   destroys:   $t0, $t1, $t2 
+ 269 01b0               #   returns: $v0 = 0 if square was unoccupied, 1 otherwise
+ 270 01b0               set_cell_at_location:
+ 271 01b0               
+ 272 01b0 3C080000	    la      $t0, board_attributes
+     01b4 35080000
+ 273 01b8               
+ 274 01b8 8D090000	    lw      $t1, 0($t0)         # $t1 contains the board_size
+ 275 01bc 01240018	    mult	$t1, $a0		    # board_size * row_number
+ 276 01c0 00004812	    mflo	$t1					# $t1 = board_size * row number
+ 277 01c4               
+ 278 01c4 01244820	    add		$t1, $t1, $a0		
+ 279 01c8 01254820	    add		$t1, $t1, $a1		# we now have index of the cell to be set
+ 280 01cc                   
+ 281 01cc 3C080000	    la		$t0, cell_array
+     01d0 35080000
+ 282 01d4 01094020	    add		$t0, $t0, $t1       # move cell_array ptr to appropriate position
+ 283 01d8               
+ 284 01d8 81090000	    lb		$t1, 0($t0)		    #
+ 285 01dc 15200003	    bne     $t1, $zero, bad_cell_location_return 
+ 286 01e0                   
+ 287 01e0 A1060000	    sb      $a2, 0($t0)         # set matrix position at ($a0, $a1) to $a2
+ 288 01e4 34020000	    li      $v0, 0
+ 289 01e8 03E00008	    jr      $ra
+ 290 01ec               
+ 291 01ec                   bad_cell_location_return:
+ 292 01ec 34020001	    li      $v0, 1
+ 293 01f0 03E00008	    jr      $ra
+ 294 01f4               
+ 295 01f4               
+ 296 01f4               #   set_cell_buffer_location
+ 297 01f4               #   
+ 298 01f4               #   Takes a point, and sets it to a character
+ 299 01f4               #   using formula (board_size * row_number) + row_number + col_num
+ 300 01f4               #   arguments:  $a0 = row
+ 301 01f4               #               $a1 = col
+ 302 01f4               #               $a2 = character to place in
+ 303 01f4               #   destroys:   $t0, $t1, $t2 
+ 304 01f4               #   returns: nothing
+ 305 01f4               set_cell_buffer_location:
+ 306 01f4               
+ 307 01f4 3C080000	    la      $t0, board_attributes
+     01f8 35080000
+ 308 01fc               
+ 309 01fc 8D090000	    lw      $t1, 0($t0)         # $t1 contains the board_size
+ 310 0200 01240018	    mult	$t1, $a0		    # board_size * row_number
+ 311 0204 00004812	    mflo	$t1					# $t1 = board_size * row number
+ 312 0208               
+ 313 0208 01244820	    add		$t1, $t1, $a0		
+ 314 020c 01254820	    add		$t1, $t1, $a1		# we now have index of the cell to be set
+ 315 0210                   
+ 316 0210 3C080000	    la		$t0, cell_array_buffer
+     0214 35080000
+ 317 0218 01094020	    add		$t0, $t0, $t1       # move cell_array ptr to appropriate position
+ 318 021c                   
+ 319 021c A1060000	    sb      $a2, 0($t0)         # set matrix position at ($a0, $a1) to $a2
+ 320 0220 03E00008	    jr      $ra
+ 321 0224               
+ 322 0224               
+ 323 0224               
+ 324 0224               #   print_board
+ 325 0224               #
+ 326 0224               #   Using the attribute struct's board size, print out each row of the matrix
+ 327 0224               #   
+ 328 0224               #   arguments: 
+ 329 0224               #   $a0 = address of board to print (also $t0)
+ 330 0224               #   $a1 = the generation being printed (also $t1)
+ 331 0224               print_board:
+ 332 0224 23BD0004	    addi    $sp, $sp, 4
+ 333 0228 AFBF0000	    sw      $ra, 0($sp)
+ 334 022c 00804021	    move    $t0, $a0     # preserve a0
+ 335 0230 00A04821	    move    $t1, $a1     # preserve a1
+ 336 0234 34020004	    li      $v0, PRINT_STRING
+ 337 0238 3C040000	    la	    $a0, generation_print_1
+     023c 34840000
+ 338 0240 0000000C	    syscall
+ 339 0244               
+ 340 0244 34020001	    li      $v0, PRINT_INT
+ 341 0248 01202021	    move    $a0, $t1
+ 342 024c 0000000C	    syscall
+ 343 0250               
+ 344 0250 34020004	    li      $v0, PRINT_STRING
+ 345 0254 3C040000	    la      $a0, generation_print_2
+     0258 34840000
+ 346 025c 0000000C	    syscall 
+ 347 0260               
+ 348 0260 3C0A0000	    la      $t2, board_attributes
+     0264 354A0000
+ 349 0268 8D4A0000	    lw      $t2, 0($t2)             # t2 now contains board side size
+ 350 026c 01402821	    move    $a1, $t2
+ 351 0270               
+ 352 0270                   print_board_header_start:
+ 353 0270               
+ 354 0270 3C040000	    la      $a0, plus_symbol
+     0274 34840000
+ 355 0278 0000000C	    syscall
+ 356 027c                   
+ 357 027c 0C0000CA	    jal     print_dashes            # print the number of dashes stored in $a1
+ 358 0280               
+ 359 0280 3C040000	    la      $a0, plus_symbol
+     0284 34840000
+ 360 0288 0000000C	    syscall
+ 361 028c 3C040000	    la      $a0, new_line
+     0290 34840000
+ 362 0294 0000000C	    syscall
+ 363 0298                   print_board_header_done:
+ 364 0298               
+ 365 0298 00005821	    move    $t3, $zero
+ 366 029c                   print_board_print_row_loop_start:
+ 367 029c 016A602A	    slt     $t4, $t3, $t2               # if $t3 is less than size, then continue
+ 368 02a0 11800013	    beq     $t4, $zero, print_board_print_row_loop_done
+ 369 02a4               
+ 370 02a4                   print_board_print_row_loop:
+ 371 02a4                   # now to print each row, start with a bar
+ 372 02a4 3C040000	    la      $a0, bar_symbol
+     02a8 34840000
+ 373 02ac 0000000C	    syscall
+ 374 02b0                   
+ 375 02b0 01406021	    move    $t4, $t2
+ 376 02b4 018B0018	    mult    $t4, $t3
+ 377 02b8 00006012	    mflo    $t4
+ 378 02bc 018B6020	    add     $t4, $t4, $t3
+ 379 02c0 01886020	    add     $t4, $t4, $t0
+ 380 02c4               
+ 381 02c4 01802021	    move    $a0, $t4
+ 382 02c8 34020004	    li      $v0, PRINT_STRING
+ 383 02cc 0000000C	    syscall
+ 384 02d0               
+ 385 02d0 3C040000	    la      $a0, bar_symbol
+     02d4 34840000
+ 386 02d8 0000000C	    syscall
+ 387 02dc 3C040000	    la      $a0, new_line
+     02e0 34840000
+ 388 02e4 0000000C	    syscall
+ 389 02e8               
+ 390 02e8 216B0001	    addi    $t3, $t3, 1
+ 391 02ec 080000A7	    j print_board_print_row_loop_start
+ 392 02f0               
+ 393 02f0                   print_board_print_row_loop_done:
+ 394 02f0 3C040000	    la      $a0, plus_symbol
+     02f4 34840000
+ 395 02f8 0000000C	    syscall
+ 396 02fc 01402821	    move    $a1, $t2
+ 397 0300 0C0000CA	    jal     print_dashes            # print the number of dashes stored in $a1
+ 398 0304               
+ 399 0304 3C040000	    la      $a0, plus_symbol
+     0308 34840000
+ 400 030c 0000000C	    syscall
+ 401 0310 3C040000	    la      $a0, new_line
+     0314 34840000
+ 402 0318 0000000C	    syscall
+ 403 031c 8FBF0000	    lw      $ra, 0($sp)
+ 404 0320 23BDFFFC	    addi    $sp, $sp, -4
+ 405 0324 03E00008	    jr      $ra
+ 406 0328               
+ 407 0328               #   print_dashes()
+ 408 0328               #
+ 409 0328               #   arguments:
+ 410 0328               #   $a1 : number of dashes to print
+ 411 0328               print_dashes:
+ 412 0328 23BD0004	    addi    $sp, $sp, 4
+ 413 032c AFBF0000	    sw      $ra, 0($sp)
+ 414 0330 3C040000	    la      $a0, dash_symbol
+     0334 34840000
+ 415 0338               
+ 416 0338                   print_dashes_loop_start:
+ 417 0338 10A00003	    beq     $a1, $zero, print_dashes_loop_done
+ 418 033c                   # for (i = board_size; i != 0; i--)
+ 419 033c 0000000C	    syscall
+ 420 0340 20A5FFFF	    addi    $a1, $a1, -1
+ 421 0344 080000CE	    j print_dashes_loop_start
+ 422 0348               
+ 423 0348                   print_dashes_loop_done:
+ 424 0348 8FBF0000	    lw      $ra, 0($sp)
+ 425 034c 23BDFFFC	    addi    $sp, $sp, -4
+ 426 0350 03E00008	    jr      $ra
+ 427 0354               
+ 428 0354               
+ 429 0354               #   set_dead_cells_to_space()
+ 430 0354               #   
+ 431 0354               #   This function takes a board and sets all of
+ 432 0354               #   the null non-alive cells to whitespace.
+ 433 0354               #
+ 434 0354               #   arguments: $a0 = address of the board to set
+ 435 0354               #   returns: n/a
+ 436 0354               set_dead_cells_to_space:
+ 437 0354 23BDFFE4		addi	$sp, $sp, -28
+ 438 0358 AFBF0018		sw	    $ra, 24($sp)
+ 439 035c AFA40014	    sw      $a0, 20($sp)
+ 440 0360 AFB40010	    sw      $s4, 16($sp)
+ 441 0364 AFB3000C		sw	    $s3, 12($sp)
+ 442 0368 AFB20008		sw	    $s2, 8($sp)
+ 443 036c AFB10004		sw	    $s1, 4($sp)
+ 444 0370 AFB00000		sw	    $s0, 0($sp)
+ 445 0374               
+ 446 0374 3C100000	    la      $s0, board_attributes
+     0378 36100000
+ 447 037c 8E100000	    lw      $s0, 0($s0)                                  # get size of board
+ 448 0380 00008821	    move    $s1, $zero                                   # $s1 = 0, used for counter
+ 449 0384               
+ 450 0384                   set_dead_cells_row_loop_start:                       # $s1 = counter
+ 451 0384 0230402A	    slt     $t0, $s1, $s0                                # is counter < board_size?
+ 452 0388 11000016	    beq     $t0, $zero, set_dead_cells_row_loop_done     # for (int i = 0; i < board_size; i++){
+ 453 038c               
+ 454 038c 02110018	    mult    $s0, $s1                                     # 
+ 455 0390 00009012	    mflo    $s2                                          #
+ 456 0394 02519020	    add     $s2, $s2, $s1                                # $s2 = (board_size * row_number) + row_number
+ 457 0398               
+ 458 0398 00009821	    move    $s3, $zero                                   # $s3 = column loop counter
+ 459 039c                   set_dead_cells_column_loop_start:
+ 460 039c 0270402A	    slt     $t0, $s3, $s0
+ 461 03a0 1100000E	    beq     $t0, $zero, set_dead_cells_column_loop_done
+ 462 03a4 0253A020	    add     $s4, $s2, $s3                                # $s4 = index of cell_array
+ 463 03a8                   
+ 464 03a8               
+ 465 03a8                   # do stuff here with correct index of cell_array
+ 466 03a8 02202821	    move    $a1, $s1
+ 467 03ac 02603021	    move    $a2, $s3
+ 468 03b0               
+ 469 03b0 8FA40014	    lw      $a0, 20($sp)
+ 470 03b4 0C000102	    jal     check_space
+ 471 03b8 34080002	    li      $t0, 2
+ 472 03bc 10480005	    beq     $v0, $t0, set_dead_cells_alive_cell_detected
+ 473 03c0 34080020	    li      $t0, 32
+ 474 03c4               
+ 475 03c4 8FA40014	    lw      $a0, 20($sp)
+ 476 03c8 00924820	    add     $t1, $a0, $s2
+ 477 03cc 01334820	    add     $t1, $t1, $s3
+ 478 03d0 A1280000	    sb      $t0, 0($t1)
+ 479 03d4               
+ 480 03d4                   set_dead_cells_alive_cell_detected:
+ 481 03d4                   # do nothing
+ 482 03d4               
+ 483 03d4 22730001	    addi    $s3, $s3, 1
+ 484 03d8 080000E7	    j       set_dead_cells_column_loop_start
+ 485 03dc               
+ 486 03dc                   set_dead_cells_column_loop_done:
+ 487 03dc               
+ 488 03dc 22310001	    addi    $s1, $s1, 1
+ 489 03e0 080000E1	    j       set_dead_cells_row_loop_start
+ 490 03e4               
+ 491 03e4               
+ 492 03e4                   set_dead_cells_row_loop_done:
+ 493 03e4                   
+ 494 03e4 8FBF0018	    lw	    $ra, 24($sp)
+ 495 03e8 8FA40014	    lw      $a0, 20($sp)
+ 496 03ec 8FB40010	    lw      $s4, 16($sp)
+ 497 03f0 8FB3000C		lw	    $s3, 12($sp)
+ 498 03f4 8FB20008		lw	    $s2, 8($sp)
+ 499 03f8 8FB10004		lw	    $s1, 4($sp)
+ 500 03fc 8FB00000		lw	    $s0, 0($sp)
+ 501 0400 23BD001C	    addi    $sp, $sp, 28
+ 502 0404 03E00008	    jr      $ra
+ 503 0408               
+ 504 0408               
+ 505 0408               #   check_space()
+ 506 0408               #
+ 507 0408               #   This function checks if a cell is null, dead, or alive.
+ 508 0408               #
+ 509 0408               #   arguments: 
+ 510 0408               #   $a0 = address of cell array
+ 511 0408               #   $a1 = row
+ 512 0408               #   $a2 = column
+ 513 0408               #
+ 514 0408               #   This is a leaf function.
+ 515 0408               #   
+ 516 0408               #   return values:
+ 517 0408               #   $v0 = 0 if null, 1 if dead, 2 if alive.
+ 518 0408               check_space:
+ 519 0408 23BDFFF0	    addi    $sp, $sp, -16
+ 520 040c AFBF000C	    sw      $ra, 12($sp)
+ 521 0410 AFA40008	    sw      $a0, 8($sp)
+ 522 0414 AFA50004	    sw      $a1, 4($sp)
+ 523 0418 AFA60000	    sw      $a2, 0($sp)
+ 524 041c               
+ 525 041c 3C080000	    la      $t0, board_attributes
+     0420 35080000
+ 526 0424 8D080000	    lw      $t0, 0($t0)
+ 527 0428               
+ 528 0428 01050018	    mult    $t0, $a1
+ 529 042c 00004012	    mflo    $t0
+ 530 0430               
+ 531 0430 01054020	    add     $t0, $t0, $a1
+ 532 0434 01064020	    add     $t0, $t0, $a2
+ 533 0438               
+ 534 0438 00882020	    add     $a0, $a0, $t0
+ 535 043c 80890000	    lb      $t1, 0($a0)       #$t1 now contains value at index ($a1, $a2)
+ 536 0440               
+ 537 0440 11200003	    beq     $t1, $zero, check_space_return_zero
+ 538 0444 340A0020	    li      $t2, 32
+ 539 0448 112A0008	    beq     $t1, $t2, check_space_return_one
+ 540 044c 08000122	    j       check_space_return_two
+ 541 0450               
+ 542 0450                   check_space_return_zero:
+ 543 0450 8FBF000C	    lw      $ra, 12($sp)
+ 544 0454 8FA40008	    lw      $a0, 8($sp)
+ 545 0458 8FA50004	    lw      $a1, 4($sp)
+ 546 045c 8FA60000	    lw      $a2, 0($sp)
+ 547 0460 23BD0010	    addi    $sp, $sp, 16
+ 548 0464 34020000	    li      $v0, 0
+ 549 0468 03E00008	    jr      $ra
+ 550 046c               
+ 551 046c                   check_space_return_one:
+ 552 046c 8FBF000C	    lw      $ra, 12($sp)
+ 553 0470 8FA40008	    lw      $a0, 8($sp)
+ 554 0474 8FA50004	    lw      $a1, 4($sp)
+ 555 0478 8FA60000	    lw      $a2, 0($sp)
+ 556 047c 23BD0010	    addi    $sp, $sp, 16
+ 557 0480 34020001	    li      $v0, 1
+ 558 0484 03E00008	    jr      $ra
+ 559 0488               
+ 560 0488                   check_space_return_two:
+ 561 0488 8FBF000C	    lw      $ra, 12($sp)
+ 562 048c 8FA40008	    lw      $a0, 8($sp)
+ 563 0490 8FA50004	    lw      $a1, 4($sp)
+ 564 0494 8FA60000	    lw      $a2, 0($sp)
+ 565 0498 23BD0010	    addi    $sp, $sp, 16
+ 566 049c 34020002	    li      $v0, 2
+ 567 04a0 03E00008	    jr      $ra
+ 568 04a4               
+ 569 04a4               
+ 570 04a4               #   simulate()
+ 571 04a4               #
+ 572 04a4               #   The big function in this program, simulates the rules of
+ 573 04a4               #   Conway's Game of Life.
+ 574 04a4               #
+ 575 04a4               #   We assume that the cell array buffer has been cleared
+ 576 04a4               #   BEFORE the simulate function is called.
+ 577 04a4               #
+ 578 04a4               #   arguments:
+ 579 04a4               #   $a0 = address of original cell array
+ 580 04a4               #   $a1 = address of cell array buffer
+ 581 04a4               #
+ 582 04a4               #   return:
+ 583 04a4               #   none, but the cell array buffer ages by one.
+ 584 04a4               simulate:
+ 585 04a4 23BDFFF4	    addi        $sp, $sp, -12
+ 586 04a8 AFBF0008	    sw          $ra, 8($sp)
+ 587 04ac AFB10004	    sw          $s1, 4($sp)
+ 588 04b0 AFB30000	    sw          $s3, 0($sp)
+ 589 04b4               
+ 590 04b4 3C090000	    la          $t1, board_attributes
+     04b8 35290000
+ 591 04bc 8D290000	    lw          $t1, 0($t1)                                  #$t0 contains the board side length
+ 592 04c0                   # for each row and column...
+ 593 04c0 00008821	    move        $s1, $zero                                   # $s1 = 0, used for counter
+ 594 04c4               
+ 595 04c4                   simulate_row_loop_start:                                 # $s1 = counter
+ 596 04c4               
+ 597 04c4 0229402A	    slt         $t0, $s1, $t1                                # is counter < board_size?
+ 598 04c8 11000043	    beq         $t0, $zero, simulate_row_loop_done           # for (int i = 0; i < board_size; i++){
+ 599 04cc               
+ 600 04cc 00009821	    move        $s3, $zero                                   # $s3 = column loop counter
+ 601 04d0                   simulate_column_loop_start:
+ 602 04d0 3C090000	    la          $t1, board_attributes
+     04d4 35290000
+ 603 04d8 8D290000	    lw          $t1, 0($t1)                                  #$t0 contains the board side length
+ 604 04dc               
+ 605 04dc 0269402A	    slt         $t0, $s3, $t1                                # is column counter less than side length?
+ 606 04e0 1100003B	    beq         $t0, $zero, simulate_column_loop_done
+ 607 04e4               
+ 608 04e4 3C090000	    la          $t1, board_attributes
+     04e8 35290000
+ 609 04ec 8D290000	    lw          $t1, 0($t1)                                  # $t0 contains the board side length
+ 610 04f0 01310018	    mult        $t1, $s1
+ 611 04f4 00004012	    mflo        $t0
+ 612 04f8 01114020	    add         $t0, $t0, $s1                                # $t0 = index of cell_array
+ 613 04fc 01134020	    add         $t0, $t0, $s3
+ 614 0500               
+ 615 0500                   # do stuff here with correct index of cell_array         #
+ 616 0500               
+ 617 0500                   # TODO: Count Neighbors
+ 618 0500                   # if neighbor < 2, set to whitespace
+ 619 0500                   # if neighbor > 3, set to whitespace
+ 620 0500                   # if cell is dead, becomes alive iff neighbor == 3
+ 621 0500                   # else, increase age by one
+ 622 0500               
+ 623 0500 02202021	    move        $a0, $s1
+ 624 0504 02602821	    move        $a1, $s3
+ 625 0508 0C00017B	    jal         count_neighbors
+ 626 050c                   
+ 627 050c 34080002	    li          $t0, 2
+ 628 0510 0048402A	    slt         $t0, $v0, $t0                                # $t0 = is the quantity < 2?
+ 629 0514 15000011	    bne         $t0, $zero, simulate_kill_cell
+ 630 0518               
+ 631 0518 34080004	    li          $t0, 4
+ 632 051c 0048402A	    slt         $t0, $v0, $t0                                # $t0 = is the quantity < 4?
+ 633 0520 1100000E	    beq         $t0, $zero, simulate_kill_cell               # $t0 = 1 if $v0 < 3, so if not less than 3, kill
+ 634 0524               
+ 635 0524 00404821	    move        $t1, $v0                                     # preserve count_neighbors in $t1
+ 636 0528               
+ 637 0528               #   This function checks if a cell is null, dead, or alive.
+ 638 0528               #   return values:
+ 639 0528               #   $v0 = 0 if null, 1 if dead, 2 if alive.
+ 640 0528 3C040000	    la          $a0, cell_array
+     052c 34840000
+ 641 0530 02202821	    move        $a1, $s1
+ 642 0534 02603021	    move        $a2, $s3
+ 643 0538 0C000102	    jal         check_space
+ 644 053c               
+ 645 053c 340A0002	    li          $t2, 2                                       # if neighbors is between 2 and 3, and cell is alive, age it 
+ 646 0540 104A000B	    beq         $v0, $t2, simulate_age_cell
+ 647 0544               
+ 648 0544                   # if we get here, the cell is dead (or null, somehow), but the neighbor is either 2 or 3.
+ 649 0544               
+ 650 0544 02202021	    move        $a0, $s1
+ 651 0548 02602821	    move        $a1, $s3
+ 652 054c 0C00017B	    jal         count_neighbors
+ 653 0550 340A0003	    li          $t2, 3
+ 654 0554 104A0017	    beq         $v0, $t2, simulate_generate_cell             # generate cell if $t1 (neighbor_count) == 3
+ 655 0558               
+ 656 0558                   # if we get here, the cell is dead, and the neighbor count is 2. We can leave.
+ 657 0558 08000172	    j           simulate_cell_done
+ 658 055c               
+ 659 055c               
+ 660 055c                   simulate_kill_cell:
+ 661 055c               #   set_cell_buffer_location
+ 662 055c               #   arguments:  $a0 = row
+ 663 055c               #               $a1 = col
+ 664 055c               #               $a2 = character to place in
+ 665 055c               #   destroys:   $t0, $t1, $t2 
+ 666 055c               #   returns: $v0 = 0 if square was unoccupied, 1 otherwise
+ 667 055c               
+ 668 055c 02202021	    move        $a0, $s1
+ 669 0560 02602821	    move        $a1, $s3
+ 670 0564 34060020	    li          $a2, 32
+ 671 0568 0C00007D	    jal         set_cell_buffer_location
+ 672 056c               
+ 673 056c 08000172	    j           simulate_cell_done
+ 674 0570               
+ 675 0570                   simulate_age_cell:
+ 676 0570               
+ 677 0570 3C090000	    la          $t1, board_attributes
+     0574 35290000
+ 678 0578 8D290000	    lw          $t1, 0($t1)                                  # $t0 contains the board side length
+ 679 057c 01310018	    mult        $t1, $s1
+ 680 0580 00004012	    mflo        $t0
+ 681 0584 3C090000	    la          $t1, cell_array
+     0588 35290000
+ 682 058c 01114020	    add         $t0, $t0, $s1                                # $t0 = index of cell_array
+ 683 0590 01134020	    add         $t0, $t0, $s3
+ 684 0594 01286020	    add         $t4, $t1, $t0                                # $t1 = address of cell_array
+ 685 0598 818D0000	    lb          $t5, 0($t4)                                  # $t4 = character at array
+ 686 059c 21AD0001	    addi        $t5, $t5, 1
+ 687 05a0               
+ 688 05a0 02202021	    move        $a0, $s1
+ 689 05a4 02602821	    move        $a1, $s3
+ 690 05a8 01A03021	    move        $a2, $t5
+ 691 05ac 0C00007D	    jal         set_cell_buffer_location
+ 692 05b0               
+ 693 05b0 08000172	    j           simulate_cell_done         
+ 694 05b4               
+ 695 05b4                   simulate_generate_cell:
+ 696 05b4                   #set_cell_at_location
+ 697 05b4 02202021	    move        $a0, $s1
+ 698 05b8 02602821	    move        $a1, $s3
+ 699 05bc 34060041	    li          $a2, 65
+ 700 05c0 0C00007D	    jal         set_cell_buffer_location
+ 701 05c4               
+ 702 05c4 08000172	    j         simulate_cell_done
+ 703 05c8               
+ 704 05c8                   simulate_cell_done:
+ 705 05c8               
+ 706 05c8                   # do stuff here with correct index of cell_array         #
+ 707 05c8 22730001	    addi        $s3, $s3, 1
+ 708 05cc 08000134	    j           simulate_column_loop_start
+ 709 05d0               
+ 710 05d0                   simulate_column_loop_done:
+ 711 05d0               
+ 712 05d0 22310001	    addi        $s1, $s1, 1
+ 713 05d4 08000131	    j           simulate_row_loop_start
+ 714 05d8               
+ 715 05d8                   simulate_row_loop_done:
+ 716 05d8 8FBF0008	    lw          $ra, 8($sp)
+ 717 05dc 8FB10004	    lw          $s1, 4($sp)
+ 718 05e0 8FB30000	    lw          $s3, 0($sp)
+ 719 05e4 23BD000C	    addi        $sp, $sp, 12
+ 720 05e8               
+ 721 05e8 03E00008	    jr          $ra
+ 722 05ec               
+ 723 05ec               
+ 724 05ec               
+ 725 05ec               #   count_neighbors()
+ 726 05ec               #
+ 727 05ec               #   This function counts the neighbors in cell_array
+ 728 05ec               #   given the row/col indices
+ 729 05ec               #
+ 730 05ec               #   Arguments:
+ 731 05ec               #   $a0 = row index
+ 732 05ec               #   $a1 = column index
+ 733 05ec               #
+ 734 05ec               #   Return Values
+ 735 05ec               #   $v0 = number of neighbors
+ 736 05ec               count_neighbors:
+ 737 05ec 23BDFFF4	    addi    $sp, $sp, -12
+ 738 05f0 AFBF0008	    sw      $ra, 8($sp)
+ 739 05f4 AFA50004	    sw      $a1, 4($sp)
+ 740 05f8 AFA40000	    sw      $a0, 0($sp)
+ 741 05fc               
+ 742 05fc 3C080000	    la      $t0, board_attributes
+     0600 35080000
+ 743 0604 8D080000	    lw      $t0, 0($t0)
+ 744 0608               
+ 745 0608 0000C021	    move    $t8, $zero
+ 746 060c               
+ 747 060c                   count_neighbors_get_top_left:
+ 748 060c 8FA90000	    lw      $t1, 0($sp)     # $t1 now contains original row index
+ 749 0610 2129FFFF	    addi    $t1, $t1, -1
+ 750 0614 0128001A	    div     $t1, $t0        # remainder placed in mfhi
+ 751 0618 00004810	    mfhi    $t1             # $t1 now contains the top left row index
+ 752 061c 0120582A	    slt     $t3, $t1, $zero
+ 753 0620 11600001	    beq     $t3, $zero, get_top_left_row_not_negative
+ 754 0624 01284820	    add     $t1, $t1, $t0
+ 755 0628                   
+ 756 0628                       get_top_left_row_not_negative:
+ 757 0628 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index
+ 758 062c 214AFFFF	    addi    $t2, $t2, -1
+ 759 0630 0148001A	    div     $t2, $t0
+ 760 0634 00005010	    mfhi    $t2             # $t2 now contains the top left column index
+ 761 0638 0140582A	    slt     $t3, $t2, $zero
+ 762 063c 11600001	    beq     $t3, $zero, get_top_left_col_not_negative
+ 763 0640 01485020	    add     $t2, $t2, $t0
+ 764 0644                   
+ 765 0644                       get_top_left_col_not_negative:
+ 766 0644               
+ 767 0644               #   arguments of check_space: 
+ 768 0644               #   $a0 = address of cell array
+ 769 0644               #   $a1 = row
+ 770 0644               #   $a2 = column
+ 771 0644               #   return values:
+ 772 0644               #   $v0 = 0 if null, 1 if dead, 2 if alive.
+ 773 0644 3C040000	    la      $a0, cell_array
+     0648 34840000
+ 774 064c 01202821	    move    $a1, $t1
+ 775 0650 01403021	    move    $a2, $t2
+ 776 0654 0C000102	    jal     check_space
+ 777 0658 340F0002	    li      $t7, 2
+ 778 065c 144F0001	    bne     $v0, $t7, count_neighbors_get_top
+ 779 0660 23180001	    addi    $t8, $t8, 1
+ 780 0664               
+ 781 0664                   count_neighbors_get_top:
+ 782 0664 3C080000	    la      $t0, board_attributes
+     0668 35080000
+ 783 066c 8D080000	    lw      $t0, 0($t0)
+ 784 0670 8FA90000	    lw      $t1, 0($sp)
+ 785 0674 2129FFFF	    addi    $t1, $t1, -1
+ 786 0678 0128001A	    div     $t1, $t0        # remainder placed in mfhi
+ 787 067c 00004810	    mfhi    $t1             # $t1 now contains the top row index
+ 788 0680 0120582A	    slt     $t3, $t1, $zero
+ 789 0684 11600001	    beq     $t3, $zero, get_top_not_negative
+ 790 0688 01284820	    add     $t1, $t1, $t0
+ 791 068c                   
+ 792 068c                       get_top_not_negative:
+ 793 068c 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index        # $t2 now contains the col index (which remains the same)
+ 794 0690 3C040000	    la      $a0, cell_array
+     0694 34840000
+ 795 0698 01202821	    move    $a1, $t1
+ 796 069c 01403021	    move    $a2, $t2
+ 797 06a0 0C000102	    jal     check_space
+ 798 06a4 340F0002	    li      $t7, 2
+ 799 06a8 144F0001	    bne     $v0, $t7, count_neighbors_get_top_right
+ 800 06ac 23180001	    addi    $t8, $t8, 1
+ 801 06b0               
+ 802 06b0                   count_neighbors_get_top_right:
+ 803 06b0 3C080000	    la      $t0, board_attributes
+     06b4 35080000
+ 804 06b8 8D080000	    lw      $t0, 0($t0)
+ 805 06bc 8FA90000	    lw      $t1, 0($sp)
+ 806 06c0 2129FFFF	    addi    $t1, $t1, -1
+ 807 06c4 0128001A	    div     $t1, $t0        # remainder placed in mfhi
+ 808 06c8 00004810	    mfhi    $t1             # $t1 now contains the top left row index
+ 809 06cc 0120582A	    slt     $t3, $t1, $zero
+ 810 06d0 11600001	    beq     $t3, $zero, get_top_right_not_negative
+ 811 06d4 01284820	    add     $t1, $t1, $t0
+ 812 06d8                   
+ 813 06d8                       get_top_right_not_negative:
+ 814 06d8                   
+ 815 06d8 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index
+ 816 06dc 214A0001	    addi    $t2, $t2, 1
+ 817 06e0 0148001A	    div     $t2, $t0
+ 818 06e4 00005010	    mfhi    $t2             # $t2 now contains the top left column index
+ 819 06e8               
+ 820 06e8 3C0C0000	    la      $t4, cell_array
+     06ec 358C0000
+ 821 06f0 01802021	    move    $a0, $t4
+ 822 06f4 01202821	    move    $a1, $t1
+ 823 06f8 01403021	    move    $a2, $t2
+ 824 06fc 0C000102	    jal     check_space
+ 825 0700 340F0002	    li      $t7, 2
+ 826 0704 144F0001	    bne     $v0, $t7, count_neighbors_get_left
+ 827 0708 23180001	    addi    $t8, $t8, 1
+ 828 070c               
+ 829 070c                   count_neighbors_get_left:
+ 830 070c 3C080000	    la      $t0, board_attributes
+     0710 35080000
+ 831 0714 8D080000	    lw      $t0, 0($t0)
+ 832 0718 8FA90000	    lw      $t1, 0($sp)
+ 833 071c                   
+ 834 071c 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index
+ 835 0720 214AFFFF	    addi    $t2, $t2, -1
+ 836 0724 0148001A	    div     $t2, $t0
+ 837 0728 00005010	    mfhi    $t2             # $t2 now contains the top left column index
+ 838 072c 0140582A	    slt     $t3, $t2, $zero
+ 839 0730 11600001	    beq     $t3, $zero, get_left_not_negative
+ 840 0734 01485020	    add     $t2, $t2, $t0
+ 841 0738                   
+ 842 0738                       get_left_not_negative:
+ 843 0738               
+ 844 0738 3C0C0000	    la      $t4, cell_array
+     073c 358C0000
+ 845 0740 01802021	    move    $a0, $t4
+ 846 0744 01202821	    move    $a1, $t1
+ 847 0748 01403021	    move    $a2, $t2
+ 848 074c 0C000102	    jal     check_space
+ 849 0750 340F0002	    li      $t7, 2
+ 850 0754 144F0001	    bne     $v0, $t7, count_neighbors_get_right
+ 851 0758 23180001	    addi    $t8, $t8, 1
+ 852 075c               
+ 853 075c                   count_neighbors_get_right:
+ 854 075c 3C080000	    la      $t0, board_attributes
+     0760 35080000
+ 855 0764 8D080000	    lw      $t0, 0($t0)
+ 856 0768 8FA90000	    lw      $t1, 0($sp)
+ 857 076c                   
+ 858 076c 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index
+ 859 0770 214A0001	    addi    $t2, $t2, 1
+ 860 0774 0148001A	    div     $t2, $t0
+ 861 0778 00005010	    mfhi    $t2             # $t2 now contains the top left column index
+ 862 077c               
+ 863 077c 3C0C0000	    la      $t4, cell_array
+     0780 358C0000
+ 864 0784 01802021	    move    $a0, $t4
+ 865 0788 01202821	    move    $a1, $t1
+ 866 078c 01403021	    move    $a2, $t2
+ 867 0790 0C000102	    jal     check_space
+ 868 0794 340F0002	    li      $t7, 2
+ 869 0798 144F0001	    bne     $v0, $t7, count_neighbors_get_bottom_left
+ 870 079c 23180001	    addi    $t8, $t8, 1
+ 871 07a0               
+ 872 07a0                   count_neighbors_get_bottom_left:
+ 873 07a0 3C080000	    la      $t0, board_attributes
+     07a4 35080000
+ 874 07a8 8D080000	    lw      $t0, 0($t0)
+ 875 07ac 8FA90000	    lw      $t1, 0($sp)
+ 876 07b0 21290001	    addi    $t1, $t1, 1
+ 877 07b4 0128001A	    div     $t1, $t0        # remainder placed in mfhi
+ 878 07b8 00004810	    mfhi    $t1             # $t1 now contains the top left row index
+ 879 07bc                   
+ 880 07bc 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index
+ 881 07c0 214AFFFF	    addi    $t2, $t2, -1
+ 882 07c4 0148001A	    div     $t2, $t0
+ 883 07c8 00005010	    mfhi    $t2             # $t2 now contains the top left column index
+ 884 07cc 0140582A	    slt     $t3, $t2, $zero
+ 885 07d0 11600001	    beq     $t3, $zero, get_bottom_left_not_negative
+ 886 07d4 01485020	    add     $t2, $t2, $t0
+ 887 07d8                   
+ 888 07d8                       get_bottom_left_not_negative:
+ 889 07d8               
+ 890 07d8 3C0C0000	    la      $t4, cell_array
+     07dc 358C0000
+ 891 07e0 01802021	    move    $a0, $t4
+ 892 07e4 01202821	    move    $a1, $t1
+ 893 07e8 01403021	    move    $a2, $t2
+ 894 07ec 0C000102	    jal     check_space
+ 895 07f0 340F0002	    li      $t7, 2
+ 896 07f4 144F0001	    bne     $v0, $t7, count_neighbors_get_bottom
+ 897 07f8 23180001	    addi    $t8, $t8, 1
+ 898 07fc               
+ 899 07fc                   count_neighbors_get_bottom:
+ 900 07fc 3C080000	    la      $t0, board_attributes
+     0800 35080000
+ 901 0804 8D080000	    lw      $t0, 0($t0)     # $t0 is the board side length
+ 902 0808 8FA90000	    lw      $t1, 0($sp)     # $t1 is the original row index
+ 903 080c 21290001	    addi    $t1, $t1, 1
+ 904 0810 0128001A	    div     $t1, $t0        # remainder placed in mfhi
+ 905 0814 00004810	    mfhi    $t1             # $t1 now contains the top left row index
+ 906 0818                   
+ 907 0818 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index
+ 908 081c               
+ 909 081c 3C0C0000	    la      $t4, cell_array
+     0820 358C0000
+ 910 0824 01802021	    move    $a0, $t4
+ 911 0828 01202821	    move    $a1, $t1
+ 912 082c 01403021	    move    $a2, $t2
+ 913 0830 0C000102	    jal     check_space
+ 914 0834 340F0002	    li      $t7, 2
+ 915 0838 144F0001	    bne     $v0, $t7, count_neighbors_get_bottom_right
+ 916 083c 23180001	    addi    $t8, $t8, 1
+ 917 0840               
+ 918 0840                   count_neighbors_get_bottom_right:
+ 919 0840 3C080000	    la      $t0, board_attributes
+     0844 35080000
+ 920 0848 8D080000	    lw      $t0, 0($t0)
+ 921 084c 8FA90000	    lw      $t1, 0($sp)
+ 922 0850 21290001	    addi    $t1, $t1, 1
+ 923 0854 0128001A	    div     $t1, $t0        # remainder placed in mfhi
+ 924 0858 00004810	    mfhi    $t1             # $t1 now contains the top left row index
+ 925 085c                   
+ 926 085c 8FAA0004	    lw      $t2, 4($sp)     # $t2 now contains original column index
+ 927 0860 214A0001	    addi    $t2, $t2, 1
+ 928 0864 0148001A	    div     $t2, $t0
+ 929 0868 00005010	    mfhi    $t2             # $t2 now contains the top left column index
+ 930 086c               
+ 931 086c 3C0C0000	    la      $t4, cell_array
+     0870 358C0000
+ 932 0874 01802021	    move    $a0, $t4
+ 933 0878 01202821	    move    $a1, $t1
+ 934 087c 01403021	    move    $a2, $t2
+ 935 0880 0C000102	    jal     check_space
+ 936 0884 340F0002	    li      $t7, 2
+ 937 0888 144F0001	    bne     $v0, $t7, count_neighbors_done
+ 938 088c 23180001	    addi    $t8, $t8, 1
+ 939 0890               
+ 940 0890                   count_neighbors_done:
+ 941 0890 03001021	    move    $v0, $t8
+ 942 0894 8FBF0008	    lw      $ra, 8($sp)
+ 943 0898 8FA50004	    lw      $a1, 4($sp)
+ 944 089c 8FA40000	    lw      $a0, 0($sp)
+ 945 08a0 23BD000C	    addi    $sp, $sp, 12
+ 946 08a4               
+ 947 08a4 03E00008	    jr      $ra
+ 948 08a8               
+ 949 08a8               
+ 950 08a8               #   copy_cell_array()
+ 951 08a8               #
+ 952 08a8               #   This function takes copies the array in $a0 into $a1
+ 953 08a8               #   The array is 930 bytes and contains null terminators,
+ 954 08a8               #   so size is the only way to do it.
+ 955 08a8               #
+ 956 08a8               #   This is a leaf function.
+ 957 08a8               #
+ 958 08a8               #   arguments:
+ 959 08a8               #   $a0 = cell_array to be copied
+ 960 08a8               #   $a1 = cell_array_buffer to be copied to
+ 961 08a8               copy_cell_array:
+ 962 08a8 00004021	    move        $t0, $zero
+ 963 08ac 340903A2	    li          $t1, 930
+ 964 08b0               
+ 965 08b0                   copy_array_loop_start:
+ 966 08b0 0109502A	    slt         $t2, $t0, $t1
+ 967 08b4 11090006	    beq         $t0, $t1, copy_array_loop_done
+ 968 08b8 808B0000	    lb          $t3, 0($a0)                         # dereference value at array1[i]
+ 969 08bc A0AB0000	    sb          $t3, 0($a1)                         # store it in array[i]    
+ 970 08c0               
+ 971 08c0 20840001	    addi        $a0, $a0, 1                         # increment pointers by one
+ 972 08c4 20A50001	    addi        $a1, $a1, 1
+ 973 08c8               
+ 974 08c8 21080001	    addi        $t0, $t0, 1 
+ 975 08cc 0800022C	    j copy_array_loop_start
+ 976 08d0                   copy_array_loop_done:
+ 977 08d0               
+ 978 08d0 03E00008	    jr          $ra
+ 979 08d4               
+ 980 08d4               
+ 981 08d4               
+ 982 08d4               #   clear_cell_array()
+ 983 08d4               #
+ 984 08d4               #   arguments:
+ 985 08d4               #   $a0 = address of cell array to be cleared
+ 986 08d4               #
+ 987 08d4               clear_cell_array:
+ 988 08d4 23BDFFF8	    addi        $sp, $sp, -8
+ 989 08d8 AFB10004	    sw          $s1, 4($sp)
+ 990 08dc AFB30000	    sw          $s3, 0($sp)
+ 991 08e0               
+ 992 08e0 3C090000	    la          $t1, board_attributes
+     08e4 35290000
+ 993 08e8 8D290000	    lw          $t1, 0($t1)                                  #$t0 contains the board side length
+ 994 08ec                   # for each row and column...
+ 995 08ec 00008821	    move        $s1, $zero                                   # $s1 = 0, used for counter
+ 996 08f0               
+ 997 08f0                   clear_cell_array_row_loop_start:                                 # $s1 = counter
+ 998 08f0               
+ 999 08f0 0229402A	    slt         $t0, $s1, $t1                                # is counter < board_size?
+1000 08f4 11000015	    beq         $t0, $zero, clear_cell_array_row_loop_done           # for (int i = 0; i < board_size; i++){
+1001 08f8               
+1002 08f8 00009821	    move        $s3, $zero                                   # $s3 = column loop counter
+1003 08fc                   clear_cell_array_column_loop_start:
+1004 08fc 3C090000	    la          $t1, board_attributes
+     0900 35290000
+1005 0904 8D290000	    lw          $t1, 0($t1)                                  #$t0 contains the board side length
+1006 0908               
+1007 0908 0269402A	    slt         $t0, $s3, $t1                                # is column counter less than side length?
+1008 090c 1100000D	    beq         $t0, $zero, clear_cell_array_column_loop_done
+1009 0910               
+1010 0910 3C090000	    la          $t1, board_attributes
+     0914 35290000
+1011 0918 8D290000	    lw          $t1, 0($t1)                                  # $t0 contains the board side length
+1012 091c 01310018	    mult        $t1, $s1
+1013 0920 00004012	    mflo        $t0
+1014 0924 01114020	    add         $t0, $t0, $s1                                # $t0 = index of cell_array
+1015 0928 01134020	    add         $t0, $t0, $s3
+1016 092c               
+1017 092c                   # do stuff here with correct index of cell_array         #
+1018 092c 00806821	    move        $t5, $a0
+1019 0930 01A86820	    add         $t5, $t5, $t0
+1020 0934 340E0020	    li          $t6, 32
+1021 0938 A1AE0000	    sb          $t6, 0($t5)
+1022 093c               
+1023 093c                   # do stuff here with correct index of cell_array         #
+1024 093c 22730001	    addi        $s3, $s3, 1
+1025 0940 0800023F	    j           clear_cell_array_column_loop_start
+1026 0944               
+1027 0944                   clear_cell_array_column_loop_done:
+1028 0944               
+1029 0944 22310001	    addi        $s1, $s1, 1
+1030 0948 0800023C	    j           clear_cell_array_row_loop_start
+1031 094c               
+1032 094c                   clear_cell_array_row_loop_done:
+1033 094c 8FB10004	    lw          $s1, 4($sp)
+1034 0950 8FB30000	    lw          $s3, 0($sp)
+1035 0954 23BD0008	    addi        $sp, $sp, 8
+1036 0958               
+1037 0958 03E00008	    jr          $ra
+1038 095c               
+1039 095c                   .globl main
+1040 095c               #   main 
+1041 095c               #
+1042 095c               #   Calls get_attributes(), stores it in a data structure
+1043 095c               #   Calls the simulate function and passes the address of
+1044 095c               #   the data structure to it
+1045 095c               main:
+1046 095c 34020004	    li      $v0, PRINT_STRING
+1047 0960 3C040000	    la      $a0, banner_string
+     0964 34840000
+1048 0968               
+1049 0968 0000000C	    syscall
+1050 096c               
+1051 096c 0C000000	    jal     get_attributes
+1052 0970               
+1053 0970 3C040000	    la      $a0, cell_array
+     0974 34840000
+1054 0978 0C0000D5	    jal     set_dead_cells_to_space
+1055 097c               
+1056 097c 3C040000	    la      $a0, cell_array_buffer
+     0980 34840000
+1057 0984 0C0000D5	    jal     set_dead_cells_to_space
+1058 0988               
+1059 0988                   # print out the initial board
+1060 0988 34020004	    li      $v0, PRINT_STRING
+1061 098c 3C040000	    la		$a0, cell_array
+     0990 34840000
+1062 0994 34050000	    li      $a1, 0
+1063 0998 0C000089	    jal     print_board
+1064 099c               
+1065 099c                   # testing count_neighbors
+1066 099c                   #   Arguments:
+1067 099c               #   $a0 = row index
+1068 099c               #   $a1 = column index
+1069 099c               #
+1070 099c               #   Return Values
+1071 099c               #   $v0 = number of neighbors
+1072 099c               
+1073 099c                   #li  $a0, 0
+1074 099c                   #li  $a1, 0
+1075 099c                   #jal count_neighbors
+1076 099c               
+1077 099c                   # testing count neighbors
+1078 099c               
+1079 099c 3C150000	    la      $s5, board_attributes
+     09a0 36B50000
+1080 09a4 8EB50004	    lw      $s5, 4($s5)                 # $t0 contains the number of generations
+1081 09a8 0000B021	    move    $s6, $zero
+1082 09ac               
+1083 09ac                   # print every generation thereafter
+1084 09ac               
+1085 09ac                   # testing cell_array clear()
+1086 09ac                   #la      $a0, cell_array
+1087 09ac                   #jal     clear_cell_array
+1088 09ac               
+1089 09ac               
+1090 09ac                   generation_loop_start:
+1091 09ac 02D5502A	    slt     $t2, $s6, $s5
+1092 09b0 11400010	    beq     $t2, $zero, main_generation_loop_done
+1093 09b4               
+1094 09b4                   # simulate, which places simulated board into buffer
+1095 09b4                   # then, copy buffer into original array
+1096 09b4 3C040000	    la      $a0, cell_array
+     09b8 34840000
+1097 09bc 3C050000	    la      $a1, cell_array_buffer
+     09c0 34A50000
+1098 09c4               
+1099 09c4 0C000129	    jal     simulate
+1100 09c8               
+1101 09c8 3C040000	    la      $a0, cell_array_buffer
+     09cc 34840000
+1102 09d0 3C050000	    la      $a1, cell_array
+     09d4 34A50000
+1103 09d8 0C00022A	    jal     copy_cell_array
+1104 09dc               
+1105 09dc 3C040000	    la      $a0, cell_array
+     09e0 34840000
+1106 09e4 22C50001	    addi    $a1, $s6, 1 
+1107 09e8 0C000089	    jal     print_board
+1108 09ec               
+1109 09ec 22D60001	    addi    $s6, $s6, 1
+1110 09f0 0800026B	    j generation_loop_start
+1111 09f4                   main_generation_loop_done:
+1112 09f4                   
+1113 09f4               
+1114 09f4 3402000A	    li      $v0, EXIT
+1115 09f8 0000000C	    syscall
+
+
+               Name                 F  Value   M V Sect.                          References
+----------------------------------  - -------- - - ----- -------------------------------------------------------------
+EXIT                                  0000000A =         @    19,  257, 1114
+PRINT_INT                             00000001 =         @    15,  340
+PRINT_STRING                          00000004 =         @    16,  119,  137,  156,  178,  236,  242,  248,  254,  336
+                                                         @   344,  382, 1046, 1060
+READ_INT                              00000005 =         @    17,  123,  141,  161,  193,  206
+READ_STRING                           00000008 =         @    18
+bad_board_value                       0000015C R   text  @   127,  130,  235
+bad_cell_location_return              000001EC R   text  @   285,  291
+bad_cell_value                        00000184 R   text  @   165,  173,  247
+bad_generation_value                  00000170 R   text  @   147,  150,  241
+bad_location_value                    00000198 R   text  @   200,  202,  213,  215,  222,  253
+banner_string                         00000000 R   data  @    27, 1047
+bar_symbol                            000001BF R   data  @    71,  372,  385
+blank_space                           0000019A R   data  @    56
+board_attributes                      00000918 R   data  @    98,  132,  151,  167,  174,  184,  196,  209,  272,  307
+                                                         @   348,  446,  525,  590,  602,  608,  677,  742,  782,  803
+                                                         @   830,  854,  873,  900,  919,  992, 1004, 1010, 1079
+board_size_prompt                     00000074 R   data  @    32,  120
+cell_array                            000001D4 R   data  @    92,  281,  640,  681,  773,  794,  820,  844,  863,  890
+                                                         @   909,  931, 1053, 1061, 1096, 1102, 1105
+cell_array_buffer                     00000576 R   data  @    95,  316, 1056, 1097, 1101
+check_space                           00000408 R   text  @   470,  518,  643,  776,  797,  824,  848,  867,  894,  913
+                                                         @   935
+check_space_return_one                0000046C R   text  @   539,  551
+check_space_return_two                00000488 R   text  @   540,  560
+check_space_return_zero               00000450 R   text  @   537,  542
+clear_cell_array                      000008D4 R   text  @   987
+clear_cell_array_column_loop_done     00000944 R   text  @  1008, 1027
+clear_cell_array_column_loop_start    000008FC R   text  @  1003, 1025
+clear_cell_array_row_loop_done        0000094C R   text  @  1000, 1032
+clear_cell_array_row_loop_start       000008F0 R   text  @   997, 1030
+copy_array_loop_done                  000008D0 R   text  @   967,  976
+copy_array_loop_start                 000008B0 R   text  @   965,  975
+copy_cell_array                       000008A8 R   text  @   961, 1103
+count_neighbors                       000005EC R   text  @   625,  652,  736
+count_neighbors_done                  00000890 R   text  @   937,  940
+count_neighbors_get_bottom            000007FC R   text  @   896,  899
+count_neighbors_get_bottom_left       000007A0 R   text  @   869,  872
+count_neighbors_get_bottom_right      00000840 R   text  @   915,  918
+count_neighbors_get_left              0000070C R   text  @   826,  829
+count_neighbors_get_right             0000075C R   text  @   850,  853
+count_neighbors_get_top               00000664 R   text  @   778,  781
+count_neighbors_get_top_left          0000060C R   text  @   747
+count_neighbors_get_top_right         000006B0 R   text  @   799,  802
+dash_symbol                           000001BD R   data  @    68,  414
+enter_locations_prompt                000000CC R   data  @    41,  179
+generation_loop_start                 000009AC R   text  @  1090, 1110
+generation_print_1                    0000019C R   data  @    59,  337
+generation_print_2                    000001B1 R   data  @    62,  345
+generation_quantity_prompt            00000088 R   data  @    35,  138
+get_attributes                        00000000 R   text  @   112, 1051
+get_attributes_complete_print         000001C3 R   data  @    77
+get_attributes_done                   0000014C R   text  @   188,  227
+get_bottom_left_not_negative          000007D8 R   text  @   885,  888
+get_left_not_negative                 00000738 R   text  @   839,  842
+get_points_loop_start                 000000E4 R   text  @   187,  225
+get_top_left_col_not_negative         00000644 R   text  @   762,  765
+get_top_left_row_not_negative         00000628 R   text  @   753,  756
+get_top_not_negative                  0000068C R   text  @   789,  792
+get_top_right_not_negative            000006D8 R   text  @   810,  813
+invalid_board_prompt                  000000E7 R   data  @    44,  237
+invalid_cells_prompt                  00000146 R   data  @    50,  249
+invalid_generations_prompt            00000111 R   data  @    47,  243
+invalid_point_prompt                  0000017A R   data  @    53,  255
+live_cell_quantity_prompt             000000AE R   data  @    38,  157
+main                                  0000095C R G text  @  1038, 1045
+main_generation_loop_done             000009F4 R   text  @  1092, 1111
+new_line                              000001C1 R   data  @    74,  361,  387,  401
+plus_symbol                           000001BB R   data  @    65,  354,  359,  394,  399
+print_board                           00000224 R   text  @   331, 1063, 1107
+print_board_header_done               00000298 R   text  @   363
+print_board_header_start              00000270 R   text  @   352
+print_board_print_row_loop            000002A4 R   text  @   370
+print_board_print_row_loop_done       000002F0 R   text  @   368,  393
+print_board_print_row_loop_start      0000029C R   text  @   366,  391
+print_dashes                          00000328 R   text  @   357,  397,  411
+print_dashes_loop_done                00000348 R   text  @   417,  423
+print_dashes_loop_start               00000338 R   text  @   416,  421
+set_cell_at_location                  000001B0 R   text  @   221,  270
+set_cell_buffer_location              000001F4 R   text  @   305,  671,  691,  700
+set_dead_cells_alive_cell_detected    000003D4 R   text  @   472,  480
+set_dead_cells_column_loop_done       000003DC R   text  @   461,  486
+set_dead_cells_column_loop_start      0000039C R   text  @   459,  484
+set_dead_cells_row_loop_done          000003E4 R   text  @   452,  492
+set_dead_cells_row_loop_start         00000384 R   text  @   450,  489
+set_dead_cells_to_space               00000354 R   text  @   436, 1054, 1057
+simulate                              000004A4 R   text  @   584, 1099
+simulate_age_cell                     00000570 R   text  @   646,  675
+simulate_cell_done                    000005C8 R   text  @   657,  673,  693,  702,  704
+simulate_column_loop_done             000005D0 R   text  @   606,  710
+simulate_column_loop_start            000004D0 R   text  @   601,  708
+simulate_generate_cell                000005B4 R   text  @   654,  695
+simulate_kill_cell                    0000055C R   text  @   629,  633,  660
+simulate_row_loop_done                000005D8 R   text  @   598,  715
+simulate_row_loop_start               000004C4 R   text  @   595,  713
+start_board_input                     0000001C R   text  @   122,  239
+start_cell_input                      00000090 R   text  @   160,  251
+start_generation_input                00000058 R   text  @   140,  245
+start_point_input                     000000E8 R   text  @   190
