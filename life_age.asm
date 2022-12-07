@@ -4,8 +4,8 @@
 #
 # Description:	Conway's Game of Life in MIPS!
 #
-#		The program reads three values from standard input:
-#		1) Board Size
+#       The program reads three values from standard input:
+#       1) Board Size
 #       2) The number of generations
 #       3) Number of live cells
 #       4) Locations to initialize the life board w/ cells
