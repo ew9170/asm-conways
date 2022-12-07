@@ -1,2 +1,2 @@
 # asm-conways
-Conway's Game of Life implemented in MIPS assembly
+Pretty self explanatory, Conway's Game of Life implemented in MIPS assembly.
